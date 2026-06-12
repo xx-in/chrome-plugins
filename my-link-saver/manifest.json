@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "xx",
+  "version": "1.0",
+  "permissions": ["activeTab", "tabs", "storage"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "icon.png"
+  },
+  "host_permissions": [
+    "https://xx282.deno.dev/*",
+    "http://localhost:5173/*",
+    "https://xshare.ccwu.cc/*"
+  ]
+}

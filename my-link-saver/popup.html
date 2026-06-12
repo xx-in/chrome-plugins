@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      :root {
+        --bg-main: #ffffff;
+        --bg-sec: #f9f9fb;
+        --bg-input: #f4f4f5;
+        --border: #e4e4e7;
+        --text: #18181b;
+        --text-m: #71717a;
+
+        /* 目录分类使用绿色调 */
+        --acc: #16a34a;
+        --acc-h: #15803d;
+        --acc-soft: rgba(22, 163, 74, 0.1);
+
+        /* 确认保存按钮使用蓝色调，优化视觉对比 */
+        --btn-primary: #2563eb;
+        --btn-primary-h: #1d4ed8;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg-main: #18181b;
+          --bg-sec: rgba(39, 39, 42, 0.5);
+          --bg-input: rgba(39, 39, 42, 0.8);
+          --border: rgba(255, 255, 255, 0.1);
+          --text: #fafafa;
+          --text-m: #a1a1aa;
+        }
+      }
+
+      body {
+        width: 440px; /* 增加整体页面宽度，布局更舒展 */
+        margin: 0;
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        background: var(--bg-main);
+        color: var(--text);
+        overflow-x: hidden;
+      }
+
+      /* 布局样式 */
+      .header {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg-sec);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .header h3 {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 700;
+      }
+      .form {
+        padding: 1.2rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+      .group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        position: relative;
+      }
+      label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: var(--text-m);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      /* 设置面板相关样式 */
+      .settings-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: background 0.2s;
+      }
+      .settings-btn:hover {
+        background: var(--border);
+      }
+      .settings-btn svg {
+        width: 1.2rem;
+        height: 1.2rem;
+        stroke: var(--text-m);
+      }
+      .settings-panel {
+        padding: 0.65rem 1.5rem;
+        background: var(--bg-sec);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .settings-panel .setting-title {
+        font-size: 0.8rem;
+        font-weight: bold;
+        color: var(--text-m);
+      }
+      .radio-group {
+        display: flex;
+        gap: 1rem;
+      }
+      .radio-label {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        font-size: 0.85rem;
+        cursor: pointer;
+      }
+      .radio-label input[type="radio"] {
+        accent-color: var(--acc);
+        margin: 0;
+        cursor: pointer;
+      }
+
+      /* 通用输入框 */
+      .input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 0.65rem 0.8rem;
+        border-radius: 0.75rem;
+        border: 1px solid var(--border);
+        background: var(--bg-input);
+        color: var(--text);
+        font-size: 0.9rem;
+        outline: none;
+        transition: all 0.2s;
+      }
+      .input:focus {
+        border-color: var(--acc);
+        background: var(--bg-main);
+        box-shadow: 0 0 0 3px var(--acc-soft);
+      }
+
+      /* --- 手写下拉组件样式 --- */
+      .select-trigger {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+        position: relative;
+        min-width: 0; /* 防止多选导致内容撑爆 */
+      }
+      /* 限制选中项的文字宽度，超出时自动显示省略号 */
+      #categoryTriggerText {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        flex: 1;
+        margin-right: 8px;
+      }
+      .select-trigger::after {
+        content: "";
+        width: 0.8rem;
+        height: 0.8rem;
+        flex-shrink: 0;
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2371717a'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")
+          no-repeat center;
+        transition: transform 0.2s;
+      }
+      .group.open .select-trigger::after {
+        transform: rotate(180deg);
+      }
+
+      .select-options {
+        position: absolute;
+        top: calc(100% + 4px);
+        left: 0;
+        right: 0;
+        background: var(--bg-main);
+        border: 1px solid var(--border);
+        border-radius: 0.75rem;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        z-index: 100;
+        max-height: 180px;
+        overflow-y: auto;
+        display: none;
+        padding: 4px;
+        box-sizing: border-box;
+
+        /* 增加间距防止选项绿色背景粘连 */
+        flex-direction: column;
+        gap: 4px;
+      }
+      .group.open .select-options {
+        display: flex;
+        animation: slideIn 0.2s ease-out;
+      }
+
+      .option {
+        padding: 0.6rem 0.8rem;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: background 0.2s;
+      }
+      .option:hover {
+        background: var(--acc-soft);
+        color: var(--acc);
+      }
+      .option.selected {
+        background: var(--acc);
+        color: white;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(-8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* 底部与按钮 */
+      .footer {
+        padding: 0 1.5rem 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 12px;
+      }
+      .status {
+        flex: 1;
+        font-size: 0.8rem;
+        font-weight: 500;
+      }
+
+      /* 修改：确认保存按钮应用蓝色主调 */
+      .btn {
+        padding: 0.65rem 1.4rem;
+        background: var(--btn-primary);
+        color: white;
+        border: none;
+        border-radius: 0.7rem;
+        font-weight: 800;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+      .btn:hover {
+        background: var(--btn-primary-h);
+        transform: translateY(-1px);
+      }
+      .btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+      .hidden {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div style="display: flex; align-items: center; gap: 8px">
+        <h3>添加导航链接</h3>
+        <!-- 提示发送中的文本也改用蓝色，与按钮呼应 -->
+        <div
+          id="loading"
+          class="hidden"
+          style="color: var(--btn-primary); font-size: 12px; font-weight: bold"
+        >
+          发送中...
+        </div>
+      </div>
+      <!-- 设置按钮 -->
+      <button id="settingsBtn" class="settings-btn" title="默认分类设置">
+        <svg
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <circle cx="12" cy="12" r="3"></circle>
+          <path
+            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+          ></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- 默认分类设置面板 -->
+    <div id="settingsPanel" class="settings-panel hidden">
+      <span class="setting-title">默认选中的分类：</span>
+      <div class="radio-group">
+        <label class="radio-label">
+          <input type="radio" name="defaultCategory" value="办公" />
+          <span>办公</span>
+        </label>
+        <label class="radio-label">
+          <input type="radio" name="defaultCategory" value="网站" />
+          <span>网站</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="form">
+      <div class="group">
+        <label>链接网址 *</label>
+        <input id="url" type="text" class="input" placeholder="https://..." />
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 1rem">
+        <div class="group">
+          <label>标题 *</label>
+          <input id="title" type="text" class="input" placeholder="网站名称" />
+        </div>
+        <div class="group" id="categoryGroup">
+          <label>分类</label>
+          <div id="categoryTrigger" class="input select-trigger">
+            <!-- 优化点：默认显示“加载中...”，防止闪烁 -->
+            <span id="categoryTriggerText">加载中...</span>
+          </div>
+          <div id="categoryOptions" class="select-options"></div>
+          <!-- 优化点：隐藏 input 初始值留空 -->
+          <input type="hidden" id="categoryValue" value="" />
+        </div>
+      </div>
+
+      <div class="group">
+        <label>图标预览</label>
+        <input id="icon" type="text" class="input" placeholder="Favicon URL" />
+      </div>
+      <div class="group">
+        <label>描述 (选填)</label>
+        <textarea
+          id="description"
+          class="input"
+          rows="2"
+          placeholder="输入描述信息..."
+        ></textarea>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div id="status" class="status"></div>
+      <button id="saveBtn" class="btn">确认保存</button>
+    </div>
+
+    <script src="./main.js"></script>
+  </body>
+</html>
