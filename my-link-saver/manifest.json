@@ -2,6 +2,7 @@
   "manifest_version": 3,
   "name": "xx",
   "version": "1.0",
+  "description": "点击插件图标将当前页面添加到导航面板",
   "permissions": ["activeTab", "tabs", "storage"],
   "action": {
     "default_popup": "popup.html",
@@ -11,5 +12,11 @@
     "https://xx282.deno.dev/*",
     "http://localhost:5173/*",
     "https://xshare.ccwu.cc/*"
-  ]
+  ],
+  "icons": {
+    "16": "icon.png",
+    "32": "icon.png",
+    "48": "icon.png",
+    "128": "icon.png"
+  }
 }

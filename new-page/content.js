@@ -1,4 +1,7 @@
 (function () {
+  // 获取当前网站的域名，作为存储和区分位置的唯一标识
+  const hostname = window.location.hostname;
+
   // 1. 创建外层圆形容器
   const container = document.createElement("div");
   container.style.position = "fixed";
@@ -106,10 +109,13 @@
     updateTheme();
   });
 
-  // 4. 从存储中读取位置并还原
-  chrome.storage.local.get(["buttonPosition"], (result) => {
-    if (result.buttonPosition) {
-      const { left, top } = result.buttonPosition;
+  // 4. 从存储中读取当前域名的位置并还原
+  chrome.storage.local.get(["buttonPositions"], (result) => {
+    const positions = result.buttonPositions || {};
+    const sitePosition = positions[hostname]; // 获取当前域名的专属位置
+
+    if (sitePosition) {
+      const { left, top } = sitePosition;
       const windowWidth = window.innerWidth;
       const windowHeight = window.innerHeight;
       const containerWidth = 38;
@@ -129,6 +135,7 @@
       container.style.left = `${targetLeft}px`;
       container.style.top = `${targetTop}px`;
     } else {
+      // 默认初始位置
       container.style.left = "20px";
       container.style.bottom = "20px";
     }
@@ -202,11 +209,14 @@
 
       if (hasMoved) {
         const rect = container.getBoundingClientRect();
-        chrome.storage.local.set({
-          buttonPosition: {
+        // 获取现有的位置映射表，更新当前域名对应的坐标，再保存回去
+        chrome.storage.local.get(["buttonPositions"], (result) => {
+          const positions = result.buttonPositions || {};
+          positions[hostname] = {
             left: rect.left,
             top: rect.top,
-          },
+          };
+          chrome.storage.local.set({ buttonPositions: positions });
         });
       }
     }
