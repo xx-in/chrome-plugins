@@ -9,8 +9,8 @@
   container.style.width = "38px";
   container.style.height = "38px";
 
-  // 优化点：将 borderRadius 从 "50%" 改为 "10px"，呈现极具质感的现代圆角矩形样式
-  container.style.borderRadius = "10px";
+  // 核心改动：由 "10px" 改回 "50%"，呈现经典的、极具质感的正圆形样式
+  container.style.borderRadius = "50%";
 
   container.style.cursor = "grab";
   container.style.zIndex = "999999";
