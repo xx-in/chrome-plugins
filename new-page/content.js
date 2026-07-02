@@ -52,7 +52,7 @@
   img.style.borderRadius = "0";
 
   container.appendChild(img);
-  document.body.appendChild(container);
+  // 【注意】这里不再同步挂载到 body，而是改为在步骤 4 读取配置后按需异步挂载
 
   // 3. 动态背景色及动效状态维护
   let isHovered = false;
@@ -109,44 +109,58 @@
     updateTheme();
   });
 
-  // 4. 从存储中读取当前域名的位置并还原
-  chrome.storage.local.get(["buttonPositions"], (result) => {
-    const positions = result.buttonPositions || {};
-    const sitePosition = positions[hostname]; // 获取当前域名的专属位置
+  // 4. 从存储中读取配置（包括：位置、是否开启悬浮窗）并渲染
+  chrome.storage.local.get(
+    ["buttonPositions", "showFloatingButton"],
+    (result) => {
+      // 获取悬浮窗开启状态，默认为 false
+      const showFloatingButton = result.showFloatingButton == true;
 
-    if (sitePosition) {
-      const { left, top } = sitePosition;
-      const windowWidth = window.innerWidth;
-      const windowHeight = window.innerHeight;
-      const containerWidth = 38;
-      const containerHeight = 38;
+      // 如果未开启悬浮窗，则直接退出，不将其挂载到 DOM 中
+      if (!showFloatingButton) {
+        return;
+      }
 
-      let targetLeft = Math.max(
-        0,
-        Math.min(left, windowWidth - containerWidth),
-      );
-      let targetTop = Math.max(
-        0,
-        Math.min(top, windowHeight - containerHeight),
-      );
+      // 只有开启时才将容器添加到页面 body 中
+      document.body.appendChild(container);
 
-      container.style.bottom = "auto";
-      container.style.right = "auto";
-      container.style.left = `${targetLeft}px`;
-      container.style.top = `${targetTop}px`;
-    } else {
-      // 默认初始位置
-      container.style.left = "20px";
-      container.style.bottom = "20px";
-    }
+      const positions = result.buttonPositions || {};
+      const sitePosition = positions[hostname]; // 获取当前域名的专属位置
 
-    // 读取完毕后，通过渐显和放大动画平滑出场，吸引视线
-    container.style.visibility = "visible";
-    setTimeout(() => {
-      container.style.opacity = "1";
-      updateTheme();
-    }, 50);
-  });
+      if (sitePosition) {
+        const { left, top } = sitePosition;
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+        const containerWidth = 38;
+        const containerHeight = 38;
+
+        let targetLeft = Math.max(
+          0,
+          Math.min(left, windowWidth - containerWidth),
+        );
+        let targetTop = Math.max(
+          0,
+          Math.min(top, windowHeight - containerHeight),
+        );
+
+        container.style.bottom = "auto";
+        container.style.right = "auto";
+        container.style.left = `${targetLeft}px`;
+        container.style.top = `${targetTop}px`;
+      } else {
+        // 默认初始位置
+        container.style.left = "20px";
+        container.style.bottom = "20px";
+      }
+
+      // 读取完毕后，通过渐显和放大动画平滑出场，吸引视线
+      container.style.visibility = "visible";
+      setTimeout(() => {
+        container.style.opacity = "1";
+        updateTheme();
+      }, 50);
+    },
+  );
 
   // 5. 拖拽逻辑实现
   let hasMoved = false;
@@ -242,4 +256,22 @@
 
   document.addEventListener("fullscreenchange", handleFullscreenChange);
   document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
+
+  // 8. 快捷键监听逻辑
+  // 拦截 Alt + N (Windows/Linux) 或 Option + N (Mac)
+  document.addEventListener(
+    "keydown",
+    (e) => {
+      const isAlt = e.altKey;
+      const isN = e.code === "KeyN" || e.keyCode === 78;
+
+      // 确保仅按下 Alt + N，没有同时按下 Ctrl、Cmd(meta) 或 Shift
+      if (isAlt && isN && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+        e.preventDefault();
+        e.stopPropagation();
+        chrome.runtime.sendMessage({ action: "open_target_url" });
+      }
+    },
+    true,
+  ); // 使用捕获阶段 (true) 尽可能提早拦截事件
 })();

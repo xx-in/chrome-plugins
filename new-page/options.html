@@ -1,0 +1,179 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>快速打开 - 设置</title>
+    <style>
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+          Arial, sans-serif;
+        background-color: #f5f5f7;
+        color: #1d1d1f;
+        margin: 0;
+        padding: 40px 20px;
+        display: flex;
+        justify-content: center;
+      }
+      .container {
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+        padding: 30px;
+        width: 100%;
+        max-width: 440px;
+        box-sizing: border-box;
+      }
+      .header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-bottom: 1px solid #e5e5e7;
+        padding-bottom: 16px;
+        margin-bottom: 24px;
+      }
+      .logo {
+        width: 32px;
+        height: 32px;
+      }
+      h1 {
+        font-size: 20px;
+        margin: 0;
+        font-weight: 600;
+        /* 使用提取自标志的蓝紫渐变 */
+        background: linear-gradient(135deg, #0052ff, #9900ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .setting-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+      }
+      .setting-info {
+        display: flex;
+        flex-direction: column;
+        padding-right: 16px;
+      }
+      .setting-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: #1d1d1f;
+      }
+      .setting-desc {
+        font-size: 12px;
+        color: #86868b;
+        margin-top: 6px;
+        line-height: 1.5;
+      }
+      /* 开关切换滑块 (Toggle Switch) */
+      .switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 28px;
+        flex-shrink: 0;
+      }
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #e5e5e7;
+        transition: 0.25s ease;
+        border-radius: 34px;
+      }
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 22px;
+        width: 22px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: 0.25s ease;
+        border-radius: 50%;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+      }
+      input:checked + .slider {
+        background: linear-gradient(135deg, #0052ff, #9900ff);
+      }
+      input:checked + .slider:before {
+        transform: translateX(22px);
+      }
+      .info-card {
+        background-color: #f5f5f7;
+        border-radius: 12px;
+        padding: 16px;
+        margin-top: 8px;
+      }
+      .info-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: #515154;
+        margin-bottom: 4px;
+      }
+      .info-desc {
+        font-size: 12px;
+        color: #86868b;
+        line-height: 1.5;
+      }
+      .info-desc code {
+        background: #e8e8ed;
+        padding: 2px 4px;
+        border-radius: 4px;
+        font-family: monospace;
+        color: #1d1d1f;
+      }
+      .status-tip {
+        margin-top: 30px;
+        font-size: 12px;
+        color: #86868b;
+        text-align: center;
+        transition: color 0.3s ease;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <img src="icon.png" class="logo" alt="Logo" />
+        <h1>快速打开 设置</h1>
+      </div>
+
+      <!-- 悬浮窗开关 -->
+      <div class="setting-item">
+        <div class="setting-info">
+          <span class="setting-title">显示网页悬浮窗</span>
+          <span class="setting-desc"
+            >开启后，在网页上会显示一个半透明磨砂质感的悬浮按钮</span
+          >
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="toggle-floating-btn" checked />
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <!-- 快捷键说明 -->
+      <div class="info-card">
+        <div class="info-title">快捷键已自动启用</div>
+        <div class="info-desc">
+          快捷键 <code>Alt + N</code> (Windows) 或 <code>Option + N</code> (Mac)
+          独立于悬浮窗运作。即使关闭悬浮窗，快捷键依然可用。
+        </div>
+      </div>
+
+      <div class="status-tip" id="status-message">保存将在刷新网页后生效</div>
+    </div>
+    <script src="options.js"></script>
+  </body>
+</html>
