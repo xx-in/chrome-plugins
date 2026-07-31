@@ -3,7 +3,7 @@
 const IS_DEV = false;
 
 const BASE_URL = IS_DEV ? "http://localhost:5173" : "https://xshare.ccwu.cc";
-const API_APPEND_URL = `${BASE_URL}/api/link/append`;
+const API_APPEND_URL = `${BASE_URL}/api/link`;
 const API_CATEGORIES_URL = `${BASE_URL}/api/link/categories`;
 // ==========================================
 
