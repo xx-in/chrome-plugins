@@ -5,10 +5,22 @@ const IS_DEV = false;
 const BASE_URL = IS_DEV ? "http://localhost:5173" : "https://xshare.ccwu.cc";
 const API_APPEND_URL = `${BASE_URL}/api/link`;
 const API_CATEGORIES_URL = `${BASE_URL}/api/link/categories`;
+// 鉴权值来自同目录 config.local.js（已被 git 忽略）
+const AUTH_VALUE = typeof AUTHORIZATION === "string" ? AUTHORIZATION.trim() : "";
 // ==========================================
 
+function apiHeaders(extra = {}) {
+  const headers = { ...extra };
+  if (AUTH_VALUE) {
+    headers.Authorization = AUTH_VALUE;
+  }
+  return headers;
+}
+
 // 【性能优化 1】：在脚本加载的第一时间并发调用分类接口
-const categoriesPromise = fetch(API_CATEGORIES_URL)
+const categoriesPromise = fetch(API_CATEGORIES_URL, {
+  headers: apiHeaders(),
+})
   .then((res) => res.json())
   .catch((err) => {
     console.error("Categories fetch failed", err);
@@ -38,8 +50,8 @@ function setUIState(loading) {
   if (loader) loader.className = loading ? "" : "hidden";
 }
 
-// 保存多选分类的数组
-let selectedCategories = [];
+// 当前选中的单个分类
+let selectedCategory = "";
 
 // 写入本地存储的默认分类配置
 function setDefaultCategory(val) {
@@ -106,7 +118,7 @@ async function init() {
   }
 }
 
-// 渲染自定义多选下拉框逻辑
+// 渲染自定义单选下拉框
 function renderCustomSelect(data) {
   const container = document.getElementById("categoryOptions");
   const trigger = document.getElementById("categoryTrigger");
@@ -118,60 +130,33 @@ function renderCustomSelect(data) {
 
   container.innerHTML = "";
 
-  // 初始化选中状态（从 HTML 的隐藏 input 读取默认值）
-  const initialVal = hiddenInput.value || "办公";
-  selectedCategories = initialVal
-    ? initialVal
-        .split(/[,，]/)
-        .map((s) => s.trim())
-        .filter(Boolean)
-    : [];
+  // 只取第一个分类，兼容以前用逗号拼起来的多选值
+  selectedCategory =
+    (hiddenInput.value || "办公").split(/[,，]/).map((s) => s.trim()).filter(Boolean)[0] ||
+    "";
 
-  // 更新 UI 文本及隐藏输入框的值
   function updateCategoryUI() {
-    if (selectedCategories.length === 0) {
-      triggerText.innerText = "选择分类";
-      hiddenInput.value = "";
-    } else {
-      // 当选择的分类超过 2 个时，只显示前 2 个并加上“等 X 个”，避免撑破界面
-      if (selectedCategories.length > 2) {
-        triggerText.innerText = `${selectedCategories.slice(0, 2).join(", ")} 等${selectedCategories.length}个`;
-      } else {
-        triggerText.innerText = selectedCategories.join(", ");
-      }
-
-      // 传递给后端的数据依然是完整的、用逗号分隔的字符串
-      hiddenInput.value = selectedCategories.join(",");
-    }
+    triggerText.innerText = selectedCategory || "选择分类";
+    hiddenInput.value = selectedCategory;
   }
 
-  // 渲染选项
   data.forEach((item) => {
     const div = document.createElement("div");
     div.className = "option";
     div.innerText = item.name;
 
-    // 如果默认值里包含该分类，则高亮
-    if (selectedCategories.includes(item.name)) {
+    if (item.name === selectedCategory) {
       div.classList.add("selected");
     }
 
     div.onclick = (e) => {
-      e.stopPropagation(); // 阻止冒泡，避免关闭下拉框，实现连续多选
-
-      if (selectedCategories.includes(item.name)) {
-        // 已选中则取消选择
-        selectedCategories = selectedCategories.filter(
-          (name) => name !== item.name,
-        );
-        div.classList.remove("selected");
-      } else {
-        // 未选中则添加
-        selectedCategories.push(item.name);
-        div.classList.add("selected");
-      }
-
+      e.stopPropagation();
+      selectedCategory = item.name;
+      container.querySelectorAll(".option").forEach((el) => {
+        el.classList.toggle("selected", el === div);
+      });
       updateCategoryUI();
+      group.classList.remove("open");
     };
     container.appendChild(div);
   });
@@ -229,7 +214,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const formData = {
       url: document.getElementById("url").value.trim(),
       title: document.getElementById("title").value.trim(),
-      category: document.getElementById("categoryValue").value, // 获取拼接后的多选分类字符串
+      category: document.getElementById("categoryValue").value,
       icon: document.getElementById("icon").value.trim(),
       description: document.getElementById("description").value.trim(),
       style: "bg-transparent",
@@ -240,13 +225,18 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    if (!AUTH_VALUE) {
+      updateStatus("请先在 config.local.js 填写 Authorization", "#ef4444");
+      return;
+    }
+
     setUIState(true);
     updateStatus("保存中...", "#2563eb"); // 配合蓝色按钮更新提示颜色
 
     try {
       const res = await fetch(API_APPEND_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: apiHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify(formData),
       });
 

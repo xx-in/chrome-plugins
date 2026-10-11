@@ -24,3 +24,6 @@ vite.config.ts.timestamp-*
 
 .dev.vars*
 !.dev.vars.example
+
+# 插件本地鉴权，不提交
+my-link-saver/config.local.js
